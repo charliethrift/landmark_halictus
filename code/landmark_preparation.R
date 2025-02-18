@@ -20,7 +20,11 @@ library(adegenet) # used for DAPC
 # is because while landmarking, if a character is obscured you can "skip" 
 # landmarks within the landmarking software. We do not include any specimens 
 # missing any landmarks in this analysis).
-all_tps_data <- readland.tps("TPS_files/AppendedTPS_all_02sep22.TPS",
+all_tps_data <- readland.tps("../data/h.ligatus_18feb25.TPS",
+                             specID = c("ID"), readcurves = FALSE, 
+                             warnmsg = TRUE,negNA = FALSE)
+
+all_tps_data <- readland.tps("../data/ligatus_test.tps",
                              specID = c("imageID"), readcurves = FALSE, 
                              warnmsg = TRUE,negNA = FALSE)
 
@@ -36,7 +40,7 @@ occurrence_data <- read_csv("beedata26jun22.csv")
 all_tps_gpa <- gpagen(all_tps_data, PrinAxes = TRUE)
 # write csv files with the landmark coordinate information and centroid size
 ## ????? maybe replace with a single file that includes both coords and Csize??????
-write.csv(all_tps_gpa$coords, "all_tps_21mar23.csv", row.names = TRUE)
+write.csv(all_tps_gpa$coords, "../data/all_tps_test.csv", row.names = TRUE)
 write.csv(all_tps_gpa$Csize, "all_Csize_tps_21mar23.csv", row.names = TRUE)
 
 
@@ -45,7 +49,7 @@ write.csv(all_tps_gpa$Csize, "all_Csize_tps_21mar23.csv", row.names = TRUE)
 ## Merge Landmark Data with Bee Occurence Data (FIRST, clean up files)
 # Note, this all looks pretty messy, and could maybe be cleaned up 
 # or done more simply with fewer lines of code. Let's look at this later
-lmdata <- read.csv("all_tps_21mar23.csv") #read landmark data in
+lmdata <- read.csv("../data/all_tps_test.csv") #read landmark data in
 Csize <- read.csv("all_Csize_tps_21mar23.csv") #read Csize data in (note, not using it in this analysis)
 Csize1 <- Csize 
 Csize2 <- setNames(cbind(rownames(Csize1), Csize1, row.names = NULL), 
@@ -53,7 +57,7 @@ Csize2 <- setNames(cbind(rownames(Csize1), Csize1, row.names = NULL),
 Csize3 <- Csize2[,c(2:3)] #delete the first column (which is just numbering)
 df_transpose = t(lmdata) #transpose the landmark data
 df_transpose1 <- df_transpose
-df_transpose1 <- df_transpose1[c(2:961),]
+df_transpose1 <- df_transpose1[-1,]
 #Format of LM data is currently two rows per specimen
 #with one row being X coordinate values and one row
 #being Y coordinate values. Below, we split into two 
