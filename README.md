@@ -1,5 +1,5 @@
-# landmark_halictus
-Exploratory analysis of Halictus ligatus wing venation patterns and asymmetry from populations in California and Georgia, USA
+# Wing Venation and Asymmetry in _Halictus ligatus_ Bees
+Exploratory analysis of _Halictus ligatus_ wing venation patterns and asymmetry from populations in California and Georgia, USA
 
 
 
