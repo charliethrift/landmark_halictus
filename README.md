@@ -1,7 +1,8 @@
 # Wing Venation and Asymmetry in _Halictus ligatus_ Bees
 Exploratory analysis of _Halictus ligatus_ wing venation patterns and asymmetry from populations in California and Georgia, USA
 
-
+## Contributors
+Cayenne Wong, Charles Thrift
 
 
 # Repository Directory
