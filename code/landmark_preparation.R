@@ -20,50 +20,54 @@ library(adegenet) # used for DAPC
 # is because while landmarking, if a character is obscured you can "skip" 
 # landmarks within the landmarking software. We do not include any specimens 
 # missing any landmarks in this analysis).
-all_tps_data <- readland.tps("../data/h.ligatus_18feb25.TPS",
-                             specID = c("ID"), readcurves = FALSE, 
-                             warnmsg = TRUE,negNA = FALSE)
 
-all_tps_data <- readland.tps("../data/ligatus_test.tps",
-                             specID = c("imageID"), readcurves = FALSE, 
-                             warnmsg = TRUE,negNA = FALSE)
+tps_data_18feb <- readland.tps("../data/CT_7apr_HligLM_18feb.tps",
+                              specID = c("imageID"), readcurves = FALSE, 
+                              warnmsg = TRUE,negNA = FALSE)
+tps_data_27feb <- readland.tps("../data/CT_7apr_HligLM_27feb.tps",
+                               specID = c("imageID"), readcurves = FALSE, 
+                               warnmsg = TRUE,negNA = FALSE)
+tps_data_4mar <- readland.tps("../data/CT_7apr_HligLM_4mar.tps",
+                              specID = c("imageID"), readcurves = FALSE, 
+                              warnmsg = TRUE,negNA = FALSE)
+tps_data_17mar <- readland.tps("../data/CT_7apr_HligLM_17mar.tps",
+                               specID = c("imageID"), readcurves = FALSE, 
+                               warnmsg = TRUE,negNA = FALSE)
 
 ## read bee occurrence csv data
-occurrence_data <- read_csv("beedata26jun22.csv")
+occurrence_data <- read_csv("../data/halictus_7apr25_occurrences.csv")
+occurrence_data <- occurrence_data %>% 
+  select("catalogNumber", "scientificName","year","sex","stateProvince",
+         "decimalLatitude","decimalLongitude")
 
 
-## Generalized Procrustes Analaysis (GPA)
+## Generalized Procrustes Analysis (GPA)
 # Run GPA on TPS data, to then generate coordinate data for each landmark 
 # on each specimen. In this code, we start with tps data and end with a CSV 
 # of coordinate data for each specimen. This can then be merged with the bee 
 # data generated above.
-all_tps_gpa <- gpagen(all_tps_data, PrinAxes = TRUE)
-# write csv files with the landmark coordinate information and centroid size
-## ????? maybe replace with a single file that includes both coords and Csize??????
-write.csv(all_tps_gpa$coords, "../data/all_tps_test.csv", row.names = TRUE)
-write.csv(all_tps_gpa$Csize, "all_Csize_tps_21mar23.csv", row.names = TRUE)
+gpa_tps_data_18feb <- gpagen(tps_data_18feb, PrinAxes = TRUE)
+gpa_tps_data_27feb <- gpagen(tps_data_27feb, PrinAxes = TRUE)
+gpa_tps_data_4mar <- gpagen(tps_data_4mar, PrinAxes = TRUE)
+gpa_tps_data_17mar <- gpagen(tps_data_17mar, PrinAxes = TRUE)
+
+# write csv files with the landmark coordinate information
+write.csv(gpa_tps_data_18feb$coords, "../data/gpa_18feb.csv", row.names = TRUE)
+write.csv(gpa_tps_data_27feb$coords, "../data/gpa_27feb.csv", row.names = TRUE)
+write.csv(gpa_tps_data_4mar$coords, "../data/gpa_4mar.csv", row.names = TRUE)
+write.csv(gpa_tps_data_17mar$coords, "../data/gpa_17mar.csv", row.names = TRUE)
+
+# clean up landmark data into a tidy dataframe
+lmdata_18feb <- read.csv("../data/gpa_18feb.csv") # image name with path
+lmdata_27feb <- read.csv("../data/gpa_27feb.csv") # image name only
+lmdata_4mar <- read.csv("../data/gpa_4mar.csv") # image name with path
+lmdata_17mar <- read.csv("../data/gpa_17mar.csv") # image name with path
 
 
 
-
-## Merge Landmark Data with Bee Occurence Data (FIRST, clean up files)
-# Note, this all looks pretty messy, and could maybe be cleaned up 
-# or done more simply with fewer lines of code. Let's look at this later
-lmdata <- read.csv("../data/all_tps_test.csv") #read landmark data in
-Csize <- read.csv("all_Csize_tps_21mar23.csv") #read Csize data in (note, not using it in this analysis)
-Csize1 <- Csize 
-Csize2 <- setNames(cbind(rownames(Csize1), Csize1, row.names = NULL), 
-                   c("number_delete", "specimenID", "Csize")) #add row names
-Csize3 <- Csize2[,c(2:3)] #delete the first column (which is just numbering)
-df_transpose = t(lmdata) #transpose the landmark data
-df_transpose1 <- df_transpose
-df_transpose1 <- df_transpose1[-1,]
-#Format of LM data is currently two rows per specimen
-#with one row being X coordinate values and one row
-#being Y coordinate values. Below, we split into two 
-#data frames and then stitch them back together to get
-#18 different variables for the 9 landmarks
-#(9 X coordinates and 9 Y coordinates)
+## first, clean up 27feb, because this one doesn't contain image paths
+df_transpose = t(lmdata_27feb) #transpose the landmark data
+df_transpose1 <- df_transpose[-1,]
 lm1 <- df_transpose1
 lmX <- lm1
 lmY <- lm1
@@ -71,58 +75,226 @@ lmX1 <- lmX
 lmX1 <- data.frame(lmX1)
 lmX2 <- setNames(cbind(rownames(lmX1), lmX1, row.names = NULL),
                  c("name", "LM1x", "LM2x", "LM3x",
-                   "LM4x", "LM5x", "LM6x", "LM7x", "LM8x", "LM9x"))
+                   "LM4x", "LM5x", "LM6x", "LM7x", "LM8x", "LM9x",
+                   "LM10x", "LM11x", "LM12x", "LM13x", "LM14x", "LM15x",
+                   "LM16x", "LM17x", "LM18x", "LM19x", "LM20x", "LM21x",
+                   "LM22x", "LM23x", "LM24x", "LM25x"))
 lmXonly <- lmX2[str_detect(lmX2$name, "X.UCSB"), ]
 #repeat with Y
 lmY1 <- lmY
 lmY1 <- data.frame(lmY1)
 lmY2 <- setNames(cbind(rownames(lmY1), lmY1, row.names = NULL),
                  c("name", "LM1y", "LM2y", "LM3y",
-                   "LM4y", "LM5y", "LM6y", "LM7y", "LM8y", "LM9y"))
+                   "LM4y", "LM5y", "LM6y", "LM7y", "LM8y", "LM9y",
+                   "LM10y", "LM11y", "LM12y", "LM13y", "LM14y", "LM15y",
+                   "LM16y", "LM17y", "LM18y", "LM19y", "LM20y", "LM21y",
+                   "LM22y", "LM23y", "LM24y", "LM25y"))
 lmYonly <- lmY2[str_detect(lmY2$name, "Y.UCSB"), ]
 lmXonly1 <- lmXonly
 lmYonly1 <- lmYonly
 lmXonly2 <- lmXonly1 %>% 
   tidyr::separate(name,                      
-                  c("X","UCSB", "barcode", "wing","species", 
-                    "location", "wingSide"), extra='drop') %>%
+                  c("X","UCSB", "barcode","wingSide"), extra='drop') %>%
   tidyr::unite('catalogNumber', c('UCSB','barcode')) 
-#drop any wings that were Right instead of Left
-lmXonly3 <- lmXonly2[lmXonly2$wingSide %in% c("ed", NA), ] #remove any "right" wings
-lmXonly4 <- lmXonly3[lmXonly3$species %in% c("edited", "far",
-                                             "lig", "tri"), ] #remove any "right" wings
-lmXonly5 <- lmXonly4[,c(2,7:15)]
-##now: lmXonly5 has x coordinate values for all 9 landmarks, and just the catalogNumber
+lmXonly3 <- lmXonly2[,-1]
+##now: lmXonly5 has x coordinate values for all 25 landmarks, and just the catalogNumber
 ###repeat for Y
 lmYonly2 <- lmYonly1 %>% 
   tidyr::separate(name,                      
-                  c("Y","UCSB", "barcode", "wing","species", 
-                    "location", "wingSide"), extra='drop') %>%
+                  c("Y","UCSB", "barcode", "wingSide"), extra='drop') %>%
   tidyr::unite('catalogNumber', c('UCSB','barcode')) 
 #drop any wings that were Right instead of Left
-lmYonly3 <- lmYonly2[lmYonly2$wingSide %in% c("ed", NA), ] #remove any "right" wings
-lmYonly4 <- lmYonly3[lmYonly3$species %in% c("edited", "far",
-                                             "lig", "tri"), ] #remove any "right" wings
-lmYonly5 <- lmYonly4[,c(2,7:15)]
+lmYonly3 <- lmYonly2[,-1]
 #Now: unite the Y and X coordinate dataframes into just one
-lm_both <- merge(lmXonly5, lmYonly5, by=c("catalogNumber"))
-####Final step: add in the Csize column
-Csize4 <- Csize3
-Csize5 <- Csize4 %>% 
-  tidyr::separate(specimenID,                      
-                  c("UCSB", "barcode", "wing","species", 
-                    "location", "wingSide"), extra='drop') %>%
-  tidyr::unite('catalogNumber', c('UCSB','barcode')) 
-Csize6 <- Csize5[,c(1,6)]
-lm_both_size <- merge(lm_both, Csize6, by=c("catalogNumber"))
-####Done with landmark data. "lm" has each specimen and 18 variables for lm coordinates
-####plus 1 variable for Csize
+lmXonly3 <- lmXonly3 %>%  tidyr::unite('wingID',c('catalogNumber','wingSide'))
+lmYonly3 <- lmYonly3 %>%  tidyr::unite('wingID',c('catalogNumber','wingSide'))
+
+lm_both <- merge(lmXonly3, lmYonly3, by=c("wingID"))
+lm_clean_27feb <- lm_both
+
+## second, clean up 18feb, does have image paths
+df_transpose1 = t(lmdata_18feb)
+df_transpose1 <- df_transpose1[-1,]
+lm1 <- df_transpose1
+lmX <- lm1
+lmY <- lm1
+lmX1 <- lmX
+lmX1 <- data.frame(lmX1)
+lmX2 <- setNames(cbind(rownames(lmX1), lmX1, row.names = NULL),
+                 c("name", "LM1x", "LM2x", "LM3x",
+                   "LM4x", "LM5x", "LM6x", "LM7x", "LM8x", "LM9x",
+                   "LM10x", "LM11x", "LM12x", "LM13x", "LM14x", "LM15x",
+                   "LM16x", "LM17x", "LM18x", "LM19x", "LM20x", "LM21x",
+                   "LM22x", "LM23x", "LM24x", "LM25x"))
+lmXonly <- lmX2[str_detect(lmX2$name, "X.C"), ]
+#repeat with Y
+lmY1 <- lmY
+lmY1 <- data.frame(lmY1)
+lmY2 <- setNames(cbind(rownames(lmY1), lmY1, row.names = NULL),
+                 c("name", "LM1y", "LM2y", "LM3y",
+                   "LM4y", "LM5y", "LM6y", "LM7y", "LM8y", "LM9y",
+                   "LM10y", "LM11y", "LM12y", "LM13y", "LM14y", "LM15y",
+                   "LM16y", "LM17y", "LM18y", "LM19y", "LM20y", "LM21y",
+                   "LM22y", "LM23y", "LM24y", "LM25y"))
+lmYonly <- lmY2[str_detect(lmY2$name, "Y.C"), ]
+lmXonly1 <- lmXonly
+lmYonly1 <- lmYonly
+lmXonly2 <- lmXonly1 %>% 
+  tidyr::separate(name,                      
+                  c("1",'2','3','4','5','6','7','8',
+                    '9','10','11','12','13','14','15'), extra='drop') %>%
+  tidyr::unite('catalogNumber', c('13','14')) 
+
+lmXonly3 <- lmXonly2[,-c(1:12)]
+lmXonly3 <- lmXonly3 %>%  tidyr::unite('wingID',c('catalogNumber','15'))
+###repeat for Y
+lmYonly2 <- lmYonly1 %>% 
+  tidyr::separate(name,                      
+                  c("1",'2','3','4','5','6','7','8',
+                    '9','10','11','12','13','14','15'), extra='drop') %>%
+  tidyr::unite('catalogNumber', c('13','14')) 
+lmYonly3 <- lmYonly2[,-c(1:12)]
+lmYonly3 <- lmYonly3 %>%  tidyr::unite('wingID',c('catalogNumber','15'))
+
+#Now: unite the Y and X coordinate dataframes into just one
+lm_both <- merge(lmXonly3, lmYonly3, by=c("wingID"))
+lm_clean_18feb <- lm_both
+
+
+## third, clean up 4mar, does have image paths
+df_transpose1 = t(lmdata_4mar)
+df_transpose1 <- df_transpose1[-1,]
+lm1 <- df_transpose1
+lmX <- lm1
+lmY <- lm1
+lmX1 <- lmX
+lmX1 <- data.frame(lmX1)
+lmX2 <- setNames(cbind(rownames(lmX1), lmX1, row.names = NULL),
+                 c("name", "LM1x", "LM2x", "LM3x",
+                   "LM4x", "LM5x", "LM6x", "LM7x", "LM8x", "LM9x",
+                   "LM10x", "LM11x", "LM12x", "LM13x", "LM14x", "LM15x",
+                   "LM16x", "LM17x", "LM18x", "LM19x", "LM20x", "LM21x",
+                   "LM22x", "LM23x", "LM24x", "LM25x"))
+lmXonly <- lmX2[str_detect(lmX2$name, "X.C"), ]
+#repeat with Y
+lmY1 <- lmY
+lmY1 <- data.frame(lmY1)
+lmY2 <- setNames(cbind(rownames(lmY1), lmY1, row.names = NULL),
+                 c("name", "LM1y", "LM2y", "LM3y",
+                   "LM4y", "LM5y", "LM6y", "LM7y", "LM8y", "LM9y",
+                   "LM10y", "LM11y", "LM12y", "LM13y", "LM14y", "LM15y",
+                   "LM16y", "LM17y", "LM18y", "LM19y", "LM20y", "LM21y",
+                   "LM22y", "LM23y", "LM24y", "LM25y"))
+lmYonly <- lmY2[str_detect(lmY2$name, "Y.C"), ]
+lmXonly1 <- lmXonly
+lmYonly1 <- lmYonly
+lmXonly2 <- lmXonly1 %>% 
+  tidyr::separate(name,                      
+                  c("1",'2','3','4','5','6','7','8',
+                    '9','10','11','12'), extra='drop') %>%
+  tidyr::unite('catalogNumber', c('10','11')) 
+
+lmXonly3 <- lmXonly2[,-c(1:9)]
+lmXonly3 <- lmXonly3 %>%  tidyr::unite('wingID',c('catalogNumber','12'))
+###repeat for Y
+lmYonly2 <- lmYonly1 %>% 
+  tidyr::separate(name,                      
+                  c("1",'2','3','4','5','6','7','8',
+                    '9','10','11','12'), extra='drop') %>%
+  tidyr::unite('catalogNumber', c('10','11')) 
+lmYonly3 <- lmYonly2[,-c(1:9)]
+lmYonly3 <- lmYonly3 %>%  tidyr::unite('wingID',c('catalogNumber','12'))
+
+#Now: unite the Y and X coordinate dataframes into just one
+lm_both <- merge(lmXonly3, lmYonly3, by=c("wingID"))
+lm_clean_4mar <- lm_both
+
+
+
+#fourth, repeat for 17 march, with image path
+df_transpose1 = t(lmdata_17mar)
+df_transpose1 <- df_transpose1[-1,]
+lm1 <- df_transpose1
+lmX <- lm1
+lmY <- lm1
+lmX1 <- lmX
+lmX1 <- data.frame(lmX1)
+lmX2 <- setNames(cbind(rownames(lmX1), lmX1, row.names = NULL),
+                 c("name", "LM1x", "LM2x", "LM3x",
+                   "LM4x", "LM5x", "LM6x", "LM7x", "LM8x", "LM9x",
+                   "LM10x", "LM11x", "LM12x", "LM13x", "LM14x", "LM15x",
+                   "LM16x", "LM17x", "LM18x", "LM19x", "LM20x", "LM21x",
+                   "LM22x", "LM23x", "LM24x", "LM25x"))
+lmXonly <- lmX2[str_detect(lmX2$name, "X.C"), ]
+#repeat with Y
+lmY1 <- lmY
+lmY1 <- data.frame(lmY1)
+lmY2 <- setNames(cbind(rownames(lmY1), lmY1, row.names = NULL),
+                 c("name", "LM1y", "LM2y", "LM3y",
+                   "LM4y", "LM5y", "LM6y", "LM7y", "LM8y", "LM9y",
+                   "LM10y", "LM11y", "LM12y", "LM13y", "LM14y", "LM15y",
+                   "LM16y", "LM17y", "LM18y", "LM19y", "LM20y", "LM21y",
+                   "LM22y", "LM23y", "LM24y", "LM25y"))
+lmYonly <- lmY2[str_detect(lmY2$name, "Y.C"), ]
+lmXonly1 <- lmXonly
+lmYonly1 <- lmYonly
+lmXonly2 <- lmXonly1 %>% 
+  tidyr::separate(name,                      
+                  c("1",'2','3','4','5','6','7','8',
+                    '9','10','11','12'), extra='drop') %>%
+  tidyr::unite('catalogNumber', c('10','11')) 
+
+lmXonly3 <- lmXonly2[,-c(1:9)]
+lmXonly3 <- lmXonly3 %>%  tidyr::unite('wingID',c('catalogNumber','12'))
+###repeat for Y
+lmYonly2 <- lmYonly1 %>% 
+  tidyr::separate(name,                      
+                  c("1",'2','3','4','5','6','7','8',
+                    '9','10','11','12'), extra='drop') %>%
+  tidyr::unite('catalogNumber', c('10','11')) 
+lmYonly3 <- lmYonly2[,-c(1:9)]
+lmYonly3 <- lmYonly3 %>%  tidyr::unite('wingID',c('catalogNumber','12'))
+
+#Now: unite the Y and X coordinate dataframes into just one
+lm_both <- merge(lmXonly3, lmYonly3, by=c("wingID"))
+lm_clean_17mar <- lm_both
 
 
 
 
-## Merge Landmark Data with Bee Occurence Data (SECOND, perform merge)
-lm_data <- merge(lm_both_size, df1, by=c("catalogNumber"))
+### now, combine the 4 dataframes of cleaned coordinates we have
+lm_all <- rbind(lm_clean_18feb,lm_clean_27feb,lm_clean_4mar,lm_clean_17mar)
+
+## Merge Landmark Data with Bee Occurrence Data (SECOND, perform merge)
+lm_all_cat <- lm_all
+lm_all_cat$catalogNumber_wing <- lm_all_cat$wingID
+lm_all_cat <- lm_all_cat %>% 
+  tidyr::separate(catalogNumber_wing,                      
+                  c("UCSB","number","wing"))
+lm_all_cat <- lm_all_cat %>% 
+  select(-wing)
+lm_all_cat <- lm_all_cat %>% tidyr::unite('catalogNumber',c('UCSB','number'))
+lm_all_cat <- lm_all_cat %>% relocate(catalogNumber, .before = wingID)
+
+write.csv(lm_all_cat, "../data/cleaned_lm_data_no_meta.csv")
+
+
+
+
+occurrence_data <- occurrence_data %>% separate(catalogNumber, c("ucsb","number"))
+occurrence_data <- occurrence_data %>% tidyr::unite("catalogNumber", c("ucsb","number"))
+
+
+lm_data <- merge(lm_all_cat, occurrence_data, by=c("catalogNumber"))
+lm_data <- lm_data %>% relocate(53:58, .before = wingID)
+
+
+
+
+write.csv(lm_data, "../data/lm_data_7april2025.csv")
+
+
+
 
 
 
